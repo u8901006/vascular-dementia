@@ -1,0 +1,165 @@
+#!/usr/bin/env node
+import { readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const DOCS_DIR = join(__dirname, "..", "docs");
+
+function escapeHtml(str) {
+  return String(str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function getReports() {
+  if (!existsSync(DOCS_DIR)) return [];
+  return readdirSync(DOCS_DIR)
+    .filter((f) => f.startsWith("report-") && f.endsWith(".html"))
+    .sort()
+    .reverse();
+}
+
+function generateIndexHtml(reports) {
+  const now = new Date();
+  now.setHours(now.getHours() + 8);
+  const today = now.toISOString().split("T")[0];
+
+  const reportItems = reports
+    .map((f, i) => {
+      const dateMatch = f.match(/report-(\d{4}-\d{2}-\d{2})\.html/);
+      if (!dateMatch) return "";
+      const dateStr = dateMatch[1];
+      const parts = dateStr.split("-");
+      const display = `${parts[0]}年${parseInt(parts[1])}月${parseInt(parts[2])}日`;
+      const isToday = dateStr === today;
+      return `<a class="report-link ${isToday ? "today" : ""}" href="${f}" style="animation-delay:${0.05 * (i + 1)}s">
+        <span class="report-date">${escapeHtml(display)}</span>
+        ${isToday ? '<span class="badge">今日</span>' : ""}
+        <span class="arrow">→</span>
+      </a>`;
+    })
+    .filter(Boolean)
+    .join("\n");
+
+  return `<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>血管型失智症每日研究報告</title>
+<meta name="description" content="血管型失智症與腦血管認知障礙每日研究文獻摘要，由 AI 自動整理分析">
+<meta property="og:title" content="血管型失智症每日研究報告">
+<meta property="og:description" content="每日自動追蹤血管型失智症最新研究文獻，AI 摘要分析">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f1e8;--surface:#fffaf2;--line:#d8c5ab;--text:#2b2118;
+  --muted:#766453;--accent:#8c4f2b;--accent-soft:#ead2bf;
+  --card-bg:color-mix(in srgb,var(--surface) 92%,white);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:"Noto Sans TC","PingFang TC","Helvetica Neue",Arial,sans-serif;
+  background:radial-gradient(circle at top,#fff6ea 0,var(--bg) 55%,#ead8c6 100%);
+  color:var(--text);line-height:1.7;min-height:100vh;
+}
+.wrap{max-width:720px;margin:0 auto;padding:24px 20px 60px}
+header{text-align:center;padding:50px 0 36px;animation:fadeDown .6s ease-out both}
+header h1{font-size:1.8rem;font-weight:700;color:var(--accent);margin-bottom:6px}
+header .subtitle{font-size:.92rem;color:var(--muted);margin-bottom:4px}
+header .tagline{font-size:.82rem;color:var(--muted);font-style:italic}
+.section-title{
+  font-size:1.1rem;font-weight:700;color:var(--accent);margin:32px 0 16px;
+  padding-left:14px;border-left:3px solid var(--accent);
+}
+.reports{display:flex;flex-direction:column;gap:10px}
+.report-link{
+  display:flex;align-items:center;gap:12px;
+  background:var(--card-bg);border:1px solid var(--line);border-radius:16px;
+  padding:16px 20px;text-decoration:none;color:var(--text);
+  box-shadow:0 6px 24px rgba(61,36,15,.03);
+  animation:fadeUp .4s ease-out both;
+  transition:box-shadow .25s,transform .25s,border-color .25s;
+}
+.report-link:hover{
+  box-shadow:0 10px 36px rgba(61,36,15,.07);transform:translateY(-2px);
+  border-color:var(--accent);
+}
+.report-link.today{border-left:3px solid var(--accent)}
+.report-date{flex:1;font-weight:600;font-size:.95rem}
+.badge{
+  font-size:.65rem;font-weight:700;background:var(--accent);color:#fff;
+  padding:2px 10px;border-radius:20px;
+}
+.arrow{color:var(--muted);font-size:1.1rem;transition:transform .2s}
+.report-link:hover .arrow{transform:translateX(4px);color:var(--accent)}
+.empty{
+  text-align:center;padding:60px 20px;color:var(--muted);font-size:.95rem;
+  animation:fadeUp .5s ease-out both;
+}
+.footer{
+  text-align:center;margin-top:48px;padding:32px 20px;
+  border-top:1px solid var(--line);color:var(--muted);font-size:.82rem;
+  animation:fadeUp .5s .3s ease-out both;
+}
+.footer a{color:var(--accent);text-decoration:none;font-weight:500}
+.footer a:hover{text-decoration:underline}
+.footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 20px;margin:16px 0}
+.footer-links a{font-size:.85rem}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){
+  .wrap{padding:16px 12px 40px}
+  header h1{font-size:1.4rem}
+  .report-link{padding:14px 16px;border-radius:12px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🧠 血管型失智症每日研究報告</h1>
+    <p class="subtitle">Vascular Dementia Daily Research Report</p>
+    <p class="tagline">每日自動追蹤最新研究文獻，由 AI 摘要分析</p>
+  </header>
+
+  <div class="section-title">📅 歷史報告</div>
+  ${
+    reports.length > 0
+      ? `<div class="reports">${reportItems}</div>`
+      : '<div class="empty">尚無歷史報告，請等待首次自動排程執行。</div>'
+  }
+
+  <div class="footer">
+    <p>由 AI 自動生成 · 資料來源：PubMed · Europe PMC</p>
+    <div class="footer-links">
+      <a href="https://www.leepsyclinic.com/" target="_blank" rel="noopener noreferrer">🏥 李政洋身心診所首頁</a>
+      <a href="https://blog.leepsyclinic.com/" target="_blank" rel="noopener noreferrer">📬 訂閱電子報</a>
+      <a href="https://buymeacoffee.com/CYlee" target="_blank" rel="noopener noreferrer">☕ Buy me a coffee</a>
+    </div>
+    <p style="margin-top:8px;font-size:.75rem">© ${escapeHtml(String(new Date().getFullYear()))} Vascular Dementia Research Daily</p>
+  </div>
+</div>
+</body>
+</html>`;
+}
+
+function main() {
+  const reports = getReports();
+  console.error(`[INFO] Found ${reports.length} reports`);
+
+  if (!existsSync(DOCS_DIR)) mkdirSync(DOCS_DIR, { recursive: true });
+
+  const html = generateIndexHtml(reports);
+  const indexPath = join(DOCS_DIR, "index.html");
+  writeFileSync(indexPath, html, "utf-8");
+  console.error(`[INFO] Index saved to ${indexPath}`);
+}
+
+main();

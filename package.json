@@ -1,0 +1,16 @@
+{
+  "name": "vascular-dementia",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "fetch": "node scripts/fetch-papers.mjs",
+    "report": "node scripts/generate-report.mjs",
+    "index": "node scripts/generate-index.mjs",
+    "build": "node scripts/fetch-papers.mjs && node scripts/generate-report.mjs && node scripts/generate-index.mjs"
+  },
+  "dependencies": {}
+}

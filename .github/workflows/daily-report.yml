@@ -1,0 +1,84 @@
+name: Vascular Dementia Daily Report
+
+on:
+  schedule:
+    - cron: "10 11 * * *" # UTC 11:10 = GMT+8 19:10
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Target date (YYYY-MM-DD), leave empty for today"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+
+      - name: Determine date
+        id: date
+        run: |
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            echo "target=${{ github.event.inputs.date }}" >> "$GITHUB_OUTPUT"
+          else
+            TARGET=$(TZ=Asia/Taipei date +%Y-%m-%d)
+            echo "target=$TARGET" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Date: $(grep target "$GITHUB_OUTPUT" | cut -d= -f2)"
+
+      - name: Fetch papers from PubMed and Europe PMC
+        run: node scripts/fetch-papers.mjs
+        continue-on-error: true
+
+      - name: Check papers data
+        id: papers
+        run: |
+          if [ -f docs/papers.json ] && grep -q '"count"' docs/papers.json; then
+            COUNT=$(node -e "const d=require('./docs/papers.json');console.log(d.count||0)")
+            echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+            echo "Papers found: $COUNT"
+          else
+            echo "count=0" >> "$GITHUB_OUTPUT"
+            mkdir -p docs
+            echo '{"date":"${{ steps.date.outputs.target }}","count":0,"papers":[]}' > docs/papers.json
+            echo "No papers found, will generate empty report"
+          fi
+
+      - name: Generate report with Zhipu AI
+        env:
+          ZHIPU_API_KEY: ${{ secrets.ZHIPU_API_KEY }}
+        run: node scripts/generate-report.mjs --input docs/papers.json --output-dir docs
+
+      - name: Generate index page
+        run: node scripts/generate-index.mjs
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+          git commit -m "📰 vascular dementia daily report: ${{ steps.date.outputs.target }}"
+          git pull --rebase origin main
+          git push
+
+      - name: Summary
+        run: |
+          echo "### 📰 Vascular Dementia Daily Report" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Date:** ${{ steps.date.outputs.target }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Papers analyzed:** ${{ steps.papers.outputs.count }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Report:** [report-${{ steps.date.outputs.target }}.html](https://u8901006.github.io/vascular-dementia/report-${{ steps.date.outputs.target }}.html)" >> "$GITHUB_STEP_SUMMARY"
