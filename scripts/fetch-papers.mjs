@@ -7,11 +7,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const DOCS_DIR = join(__dirname, "..", "docs");
 const PROCESSED_FILE = join(__dirname, "..", ".processed-pmids.json");
 
+const EUROPE_PMC = "https://www.ebi.ac.uk/europepmc/webservices/rest/search";
+const CROSSREF = "https://api.crossref.org/works";
 const PUBMED_SEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi";
 const PUBMED_FETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi";
-const EUROPE_PMC_SEARCH = "https://www.ebi.ac.uk/europepmc/webservices/rest/search";
-const NCBI_TOOL = "VascularDementiaBot";
-const NCBI_EMAIL = "github-actions[bot]@users.noreply.github.com";
 
 function getTargetDate() {
   const d = new Date();
@@ -23,10 +22,6 @@ function getDateDaysAgoISO(days) {
   const d = new Date();
   d.setDate(d.getDate() - days);
   return d.toISOString().split("T")[0];
-}
-
-function getDateDaysAgoSlashed(days) {
-  return getDateDaysAgoISO(days).replace(/-/g, "/");
 }
 
 function loadProcessedPmids() {
@@ -45,13 +40,48 @@ function saveProcessedPmids(pmids) {
   writeFileSync(PROCESSED_FILE, JSON.stringify({ pmids: recent }), "utf-8");
 }
 
-async function fetchGet(url, timeout = 60000) {
+const EPMC_QUERIES = [
+  {
+    name: "VaD core",
+    q: '"vascular dementia" OR "vascular cognitive impairment" OR "post-stroke dementia"',
+  },
+  {
+    name: "PSCI + CSVD",
+    q: '"post-stroke cognitive impairment" OR "cerebral small vessel disease" OR "white matter hyperintensities"',
+  },
+  {
+    name: "subtypes",
+    q: '"Binswanger" OR "subcortical ischemic vascular dementia" OR CADASIL OR "strategic infarct dementia"',
+  },
+  {
+    name: "VaD + risk",
+    q: '("vascular dementia" OR "vascular cognitive impairment") AND (hypertension OR diabetes OR "atrial fibrillation" OR stroke)',
+  },
+  {
+    name: "VaD + imaging",
+    q: '("vascular cognitive impairment" OR "vascular dementia") AND (MRI OR "white matter" OR lacune OR microbleed)',
+  },
+  {
+    name: "VaD + neuropsych",
+    q: '("vascular dementia" OR "vascular cognitive impairment") AND (cognition OR "executive function" OR MoCA OR "cognitive decline")',
+  },
+  {
+    name: "VaD + care",
+    q: '("vascular dementia" OR "vascular cognitive impairment") AND (caregiver OR "quality of life" OR "long-term care" OR prevention)',
+  },
+  {
+    name: "VaD + mood",
+    q: '("vascular dementia" OR "vascular cognitive impairment") AND (depression OR apathy OR anxiety OR "neuropsychiatric")',
+  },
+];
+
+async function httpGet(url, timeout = 45000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   try {
     const resp = await fetch(url, {
       signal: controller.signal,
-      headers: { "User-Agent": `${NCBI_TOOL}/1.0 (${NCBI_EMAIL})` },
+      headers: { "User-Agent": "VascularDementiaBot/1.0 (research)" },
     });
     clearTimeout(timer);
     return resp;
@@ -61,148 +91,140 @@ async function fetchGet(url, timeout = 60000) {
   }
 }
 
-async function safeJson(resp) {
-  const ct = resp.headers.get("content-type") || "";
-  const text = await resp.text();
-  if (text.trim().startsWith("<!DOCTYPE") || text.trim().startsWith("<html")) {
-    console.error(`[WARN] HTML error page (${resp.status}): ${text.slice(0, 300)}`);
-    throw new Error(`NCBI returned HTML error page`);
-  }
-  try {
-    return JSON.parse(text);
-  } catch {
-    console.error(`[WARN] JSON parse failed, response starts with: ${text.slice(0, 200)}`);
-    throw new Error("Response is not valid JSON");
-  }
-}
-
-const SEARCH_QUERIES = [
-  {
-    name: "MeSH core",
-    term: '"Dementia, Vascular"[MeSH Terms] AND "2024"[pdat] : "3000"[pdat]',
-  },
-  {
-    name: "VCI + post-stroke",
-    term: '("vascular cognitive impairment"[tiab] OR "post-stroke cognitive impairment"[tiab] OR PSCI[tiab]) AND "2025"[pdat] : "3000"[pdat]',
-  },
-  {
-    name: "VaD broad",
-    term: '("vascular dementia"[tiab] OR "post-stroke dementia"[tiab] OR "poststroke dementia"[tiab]) AND "2025"[pdat] : "3000"[pdat]',
-  },
-  {
-    name: "CSVD + cognition",
-    term: '("cerebral small vessel disease"[tiab] OR "white matter hyperintensities"[tiab]) AND (cognition[tiab] OR dementia[tiab] OR "cognitive impairment"[tiab]) AND "2025"[pdat] : "3000"[pdat]',
-  },
-  {
-    name: "CADASIL + Binswanger",
-    term: '(CADASIL[tiab] OR "Binswanger disease"[tiab] OR "subcortical ischemic vascular dementia"[tiab]) AND "2020"[pdat] : "3000"[pdat]',
-  },
-];
-
-async function searchPubMedQuery(queryTerm) {
-  const params = new URLSearchParams({
-    db: "pubmed",
-    term: queryTerm,
-    retmax: "40",
-    sort: "date",
-    retmode: "json",
-    tool: NCBI_TOOL,
-    email: NCBI_EMAIL,
-  });
-  const url = `${PUBMED_SEARCH}?${params.toString()}`;
-
-  try {
-    const resp = await fetchGet(url, 30000);
-    const data = await safeJson(resp);
-    return data?.esearchresult?.idlist || [];
-  } catch (e) {
-    console.error(`[WARN] PubMed query failed: ${e.message}`);
-    return [];
-  }
-}
-
-async function searchPubMed() {
-  const allPmids = new Set();
-  for (const q of SEARCH_QUERIES) {
-    console.error(`[INFO] PubMed query: ${q.name}`);
-    const ids = await searchPubMedQuery(q.term);
-    ids.forEach((id) => allPmids.add(id));
-    console.error(`[INFO]   → ${ids.length} PMIDs (total unique: ${allPmids.size})`);
-    await new Promise((r) => setTimeout(r, 1000));
-  }
-  console.error(`[INFO] PubMed total unique PMIDs: ${allPmids.size}`);
-  return [...allPmids];
-}
-
 async function searchEuropePMC() {
   const since = getDateDaysAgoISO(7);
-  const query = '("vascular dementia" OR "vascular cognitive impairment" OR "post-stroke cognitive impairment" OR "cerebral small vessel disease" OR "white matter hyperintensities" OR "post-stroke dementia")';
-  const fullQuery = `${query} AND FIRST_PDATE:[${since} TO 2099-12-31]`;
-  const url = `${EUROPE_PMC_SEARCH}?query=${encodeURIComponent(fullQuery)}&format=json&pageSize=30`;
+  const allResults = new Map();
 
-  console.error(`[INFO] Searching Europe PMC...`);
-  try {
-    const resp = await fetchGet(url, 30000);
-    const text = await resp.text();
-    let data;
+  for (const { name, q } of EPMC_QUERIES) {
+    const dateFilter = `FIRST_PDATE:[${since} TO 2099-12-31]`;
+    const fullQuery = `(${q}) AND ${dateFilter}`;
+    const url = `${EUROPE_PMC}?query=${encodeURIComponent(fullQuery)}&format=json&pageSize=25`;
+
+    console.error(`[INFO] EPMC query: ${name}`);
     try {
-      data = JSON.parse(text);
-    } catch {
-      console.error(`[ERROR] Europe PMC non-JSON: ${text.slice(0, 200)}`);
-      return [];
+      const resp = await httpGet(url);
+      const text = await resp.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.error(`[WARN] EPMC non-JSON response for "${name}"`);
+        continue;
+      }
+      const results = data?.resultList?.result || [];
+      let newCount = 0;
+      for (const r of results) {
+        const id = r.pmid || r.doi || r.title;
+        if (!id || allResults.has(id)) continue;
+        allResults.set(id, {
+          pmid: r.pmid || "",
+          title: r.title || "",
+          journal: r.journalTitle || "",
+          date: r.firstPublicationDate || "",
+          abstract: (r.abstractText || "").slice(0, 2000),
+          url: r.pmid ? `https://pubmed.ncbi.nlm.nih.gov/${r.pmid}/` : r.doi ? `https://doi.org/${r.doi}` : "",
+          doi: r.doi || "",
+          keywords: [],
+        });
+        newCount++;
+      }
+      console.error(`[INFO]   → ${results.length} results, ${newCount} new (total: ${allResults.size})`);
+    } catch (e) {
+      console.error(`[WARN] EPMC "${name}" failed: ${e.message}`);
     }
-    const results = data?.resultList?.result || [];
-    console.error(`[INFO] Europe PMC found ${results.length} papers`);
-    return results
-      .filter((r) => r.pmid)
-      .map((r) => ({
-        pmid: r.pmid,
-        title: r.title || "",
-        journal: r.journalTitle || "",
-        date: r.firstPublicationDate || "",
-        abstract: r.abstractText || "",
-        url: r.pmid ? `https://pubmed.ncbi.nlm.nih.gov/${r.pmid}/` : "",
-        doi: r.doi || "",
-        keywords: [],
-      }));
+    await new Promise((r) => setTimeout(r, 500));
+  }
+
+  console.error(`[INFO] EPMC total unique papers: ${allResults.size}`);
+  return [...allResults.values()];
+}
+
+async function searchCrossref() {
+  const since = getDateDaysAgoISO(7);
+  const query = '"vascular dementia" OR "vascular cognitive impairment" OR "post-stroke cognitive impairment"';
+  const filter = `from-pub-date:${since}`;
+  const url = `${CROSSREF}?query=${encodeURIComponent(query)}&filter=${filter}&rows=20&sort=published&order=desc`;
+
+  console.error(`[INFO] Searching Crossref...`);
+  try {
+    const resp = await httpGet(url, 30000);
+    const data = await resp.json();
+    const items = data?.message?.items || [];
+    console.error(`[INFO] Crossref found ${items.length} papers`);
+
+    return items
+      .filter((item) => item.DOI || item.title)
+      .map((item) => {
+        const title = (item.title || [""])[0] || "";
+        const journal = (item["container-title"] || [""])[0] || "";
+        const dateParts = item.published?.["date-parts"]?.[0] || [];
+        const dateStr = dateParts.join("-");
+
+        let pmid = "";
+        const articleNumber = item["article-number"] || "";
+        
+        return {
+          pmid,
+          title,
+          journal,
+          date: dateStr,
+          abstract: (item.abstract || "").replace(/<[^>]+>/g, "").slice(0, 2000),
+          url: item.DOI ? `https://doi.org/${item.DOI}` : item.URL || "",
+          doi: item.DOI || "",
+          keywords: item.subject || [],
+        };
+      });
   } catch (e) {
-    console.error(`[ERROR] Europe PMC search failed: ${e.message}`);
+    console.error(`[WARN] Crossref failed: ${e.message}`);
     return [];
   }
 }
 
-async function fetchPubMedDetails(pmids) {
-  if (!pmids.length) return [];
-  const allPapers = [];
-  const chunks = [];
-  for (let i = 0; i < pmids.length; i += 50) {
-    chunks.push(pmids.slice(i, i + 50));
-  }
+async function tryPubMed() {
+  const since = getDateDaysAgoISO(7).replace(/-/g, "/");
+  const query = '"Dementia, Vascular"[MeSH Terms] AND "2025"[pdat]:"3000"[pdat]';
+  const params = new URLSearchParams({
+    db: "pubmed",
+    term: query,
+    retmax: "30",
+    sort: "date",
+    retmode: "json",
+    tool: "VascularDementiaBot",
+    email: "bot@vascular-dementia.example.com",
+  });
 
-  for (const chunk of chunks) {
-    const params = new URLSearchParams({
-      db: "pubmed",
-      id: chunk.join(","),
-      retmode: "xml",
-      tool: NCBI_TOOL,
-      email: NCBI_EMAIL,
-    });
-    const url = `${PUBMED_FETCH}?${params.toString()}`;
-    console.error(`[INFO] Fetching details for ${chunk.length} papers...`);
-    try {
-      const resp = await fetchGet(url, 90000);
-      const xml = await resp.text();
-      if (xml.trim().startsWith("<!DOCTYPE") || xml.trim().startsWith("<html")) {
-        console.error(`[WARN] PubMed fetch returned HTML error`);
-        continue;
-      }
-      allPapers.push(...parsePubMedXml(xml));
-    } catch (e) {
-      console.error(`[ERROR] PubMed fetch failed: ${e.message}`);
+  console.error(`[INFO] Trying PubMed...`);
+  try {
+    const resp = await httpGet(`${PUBMED_SEARCH}?${params}`, 15000);
+    const text = await resp.text();
+    if (text.includes("<!DOCTYPE") || text.includes("Error Blocked")) {
+      console.error(`[INFO] PubMed blocked (expected on GitHub Actions)`);
+      return [];
     }
-    await new Promise((r) => setTimeout(r, 1000));
+    const data = JSON.parse(text);
+    const pmids = data?.esearchresult?.idlist || [];
+    console.error(`[INFO] PubMed found ${pmids.length} PMIDs`);
+
+    if (!pmids.length) return [];
+
+    const fetchParams = new URLSearchParams({
+      db: "pubmed",
+      id: pmids.join(","),
+      retmode: "xml",
+      tool: "VascularDementiaBot",
+      email: "bot@vascular-dementia.example.com",
+    });
+    const fetchResp = await httpGet(`${PUBMED_FETCH}?${fetchParams}`, 60000);
+    const xml = await fetchResp.text();
+    if (xml.includes("<!DOCTYPE") || xml.includes("Error Blocked")) {
+      console.error(`[INFO] PubMed fetch blocked`);
+      return [];
+    }
+    return parsePubMedXml(xml);
+  } catch (e) {
+    console.error(`[INFO] PubMed unavailable: ${e.message}`);
+    return [];
   }
-  return allPapers;
 }
 
 function parsePubMedXml(xml) {
@@ -250,27 +272,24 @@ function parsePubMedXml(xml) {
     }
 
     papers.push({
-      pmid,
-      title,
-      journal,
-      date: dateStr,
-      abstract,
+      pmid, title, journal, date: dateStr, abstract,
       url: pmid ? `https://pubmed.ncbi.nlm.nih.gov/${pmid}/` : "",
-      doi: "",
-      keywords,
+      doi: "", keywords,
     });
   }
   return papers;
 }
 
-function dedupPapers(pubmedPapers, epmcPapers, processedPmids) {
+function mergeAndDedup(allSources, processedPmids) {
   const seen = new Set();
   const result = [];
-  for (const p of [...pubmedPapers, ...epmcPapers]) {
+  for (const p of allSources) {
     const id = p.pmid || p.doi || p.title;
-    if (processedPmids.has(p.pmid)) continue;
-    if (seen.has(id)) continue;
-    seen.add(id);
+    if (!id || id.trim() === "") continue;
+    if (processedPmids.has(p.pmid) && p.pmid) continue;
+    const key = id.toLowerCase().trim();
+    if (seen.has(key)) continue;
+    seen.add(key);
     result.push(p);
   }
   return result;
@@ -281,12 +300,16 @@ async function main() {
   console.error(`[INFO] Target date: ${targetDate}`);
 
   const processedPmids = loadProcessedPmids();
+  console.error(`[INFO] Previously processed PMIDs: ${processedPmids.size}`);
 
-  const pmids = await searchPubMed();
-  const pubmedPapers = await fetchPubMedDetails(pmids);
   const epmcPapers = await searchEuropePMC();
+  const crossrefPapers = await searchCrossref();
+  const pubmedPapers = await tryPubMed();
 
-  const allPapers = dedupPapers(pubmedPapers, epmcPapers, processedPmids);
+  const allSources = [...epmcPapers, ...crossrefPapers, ...pubmedPapers];
+  console.error(`[INFO] Total from all sources: ${allSources.length}`);
+
+  const allPapers = mergeAndDedup(allSources, processedPmids);
   console.error(`[INFO] After dedup: ${allPapers.length} new papers`);
 
   const output = {
@@ -296,9 +319,8 @@ async function main() {
   };
 
   if (!existsSync(DOCS_DIR)) mkdirSync(DOCS_DIR, { recursive: true });
-  const outputPath = join(DOCS_DIR, "papers.json");
-  writeFileSync(outputPath, JSON.stringify(output, null, 2), "utf-8");
-  console.error(`[INFO] Saved to ${outputPath}`);
+  writeFileSync(join(DOCS_DIR, "papers.json"), JSON.stringify(output, null, 2), "utf-8");
+  console.error(`[INFO] Saved papers.json`);
 
   const newPmids = allPapers.filter((p) => p.pmid).map((p) => p.pmid);
   saveProcessedPmids(newPmids);
