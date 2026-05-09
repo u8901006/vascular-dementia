@@ -10,6 +10,8 @@ const PROCESSED_FILE = join(__dirname, "..", ".processed-pmids.json");
 const PUBMED_SEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi";
 const PUBMED_FETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi";
 const EUROPE_PMC_SEARCH = "https://www.ebi.ac.uk/europepmc/webservices/rest/search";
+const NCBI_TOOL = "VascularDementiaBot";
+const NCBI_EMAIL = "github-actions[bot]@users.noreply.github.com";
 
 function getTargetDate() {
   const d = new Date();
@@ -43,43 +45,13 @@ function saveProcessedPmids(pmids) {
   writeFileSync(PROCESSED_FILE, JSON.stringify({ pmids: recent }), "utf-8");
 }
 
-const CORE_TERMS = [
-  '"Dementia, Vascular"[MeSH Terms]',
-  '"vascular dementia"[tiab]',
-  '"vascular cognitive impairment"[tiab]',
-  "VCI[tiab]",
-  '"post-stroke dementia"[tiab]',
-  '"poststroke dementia"[tiab]',
-  '"post-stroke cognitive impairment"[tiab]',
-  "PSCI[tiab]",
-  '"cerebral small vessel disease"[tiab]',
-  '"white matter hyperintensities"[tiab]',
-  '"subcortical ischemic vascular dementia"[tiab]',
-  "CADASIL[tiab]",
-  '"strategic infarct dementia"[tiab]',
-];
-
-const JOURNAL_BATCHES = [
-  ["Stroke", "Alzheimers Dement", "J Alzheimers Dis", "Neurology", "Lancet Neurol"],
-  ["JAMA Neurol", "Brain", "Ann Neurol", "Cerebrovasc Dis", "J Stroke Cerebrovasc Dis"],
-  ["Int Psychogeriatr", "Dement Geriatr Cogn Disord", "Neuroimage Clin", "J Cereb Blood Flow Metab", "Acta Neuropathol"],
-  ["Age Ageing", "BMC Neurol", "Front Neurol", "Int J Stroke", "Transl Stroke Res"],
-  ["Nutrients", "Hypertension", "Diabetes Care", "Circulation", "Eur Heart J"],
-  ["BMC Geriatr", "J Am Geriatr Soc", "Gerontologist", "Aging Ment Health", "Front Aging Neurosci"],
-  ["PLoS One", "BMJ Open", "eClinicalMedicine", "Neurobiol Aging", "GeroScience"],
-];
-
-async function fetchUrl(url, options = {}, timeout = 60000) {
+async function fetchGet(url, timeout = 60000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   try {
     const resp = await fetch(url, {
-      ...options,
       signal: controller.signal,
-      headers: {
-        "User-Agent": "VascularDementiaBot/1.0 (research aggregator)",
-        ...(options.headers || {}),
-      },
+      headers: { "User-Agent": `${NCBI_TOOL}/1.0 (${NCBI_EMAIL})` },
     });
     clearTimeout(timer);
     return resp;
@@ -91,52 +63,73 @@ async function fetchUrl(url, options = {}, timeout = 60000) {
 
 async function safeJson(resp) {
   const ct = resp.headers.get("content-type") || "";
-  if (!ct.includes("json") && !ct.includes("javascript")) {
-    const text = await resp.text();
-    console.error(`[WARN] Non-JSON response (${resp.status}): ${text.slice(0, 200)}`);
-    throw new Error(`Expected JSON but got ${ct}`);
+  const text = await resp.text();
+  if (text.trim().startsWith("<!DOCTYPE") || text.trim().startsWith("<html")) {
+    console.error(`[WARN] HTML error page (${resp.status}): ${text.slice(0, 300)}`);
+    throw new Error(`NCBI returned HTML error page`);
   }
-  return resp.json();
+  try {
+    return JSON.parse(text);
+  } catch {
+    console.error(`[WARN] JSON parse failed, response starts with: ${text.slice(0, 200)}`);
+    throw new Error("Response is not valid JSON");
+  }
 }
 
-async function searchPubMedBatch(journals, termPart, since) {
-  const journalPart = journals.map((j) => `"${j}"[ta]`).join(" OR ");
-  const query = `(${journalPart}) AND (${termPart}) AND "${since}"[pdat] : "3000"[pdat]`;
+const SEARCH_QUERIES = [
+  {
+    name: "MeSH core",
+    term: '"Dementia, Vascular"[MeSH Terms] AND "2024"[pdat] : "3000"[pdat]',
+  },
+  {
+    name: "VCI + post-stroke",
+    term: '("vascular cognitive impairment"[tiab] OR "post-stroke cognitive impairment"[tiab] OR PSCI[tiab]) AND "2025"[pdat] : "3000"[pdat]',
+  },
+  {
+    name: "VaD broad",
+    term: '("vascular dementia"[tiab] OR "post-stroke dementia"[tiab] OR "poststroke dementia"[tiab]) AND "2025"[pdat] : "3000"[pdat]',
+  },
+  {
+    name: "CSVD + cognition",
+    term: '("cerebral small vessel disease"[tiab] OR "white matter hyperintensities"[tiab]) AND (cognition[tiab] OR dementia[tiab] OR "cognitive impairment"[tiab]) AND "2025"[pdat] : "3000"[pdat]',
+  },
+  {
+    name: "CADASIL + Binswanger",
+    term: '(CADASIL[tiab] OR "Binswanger disease"[tiab] OR "subcortical ischemic vascular dementia"[tiab]) AND "2020"[pdat] : "3000"[pdat]',
+  },
+];
 
-  const body = new URLSearchParams({
+async function searchPubMedQuery(queryTerm) {
+  const params = new URLSearchParams({
     db: "pubmed",
-    term: query,
+    term: queryTerm,
     retmax: "40",
     sort: "date",
     retmode: "json",
+    tool: NCBI_TOOL,
+    email: NCBI_EMAIL,
   });
+  const url = `${PUBMED_SEARCH}?${params.toString()}`;
 
   try {
-    const resp = await fetchUrl(PUBMED_SEARCH, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: body.toString(),
-    }, 30000);
+    const resp = await fetchGet(url, 30000);
     const data = await safeJson(resp);
     return data?.esearchresult?.idlist || [];
   } catch (e) {
-    console.error(`[WARN] PubMed batch failed: ${e.message}`);
+    console.error(`[WARN] PubMed query failed: ${e.message}`);
     return [];
   }
 }
 
 async function searchPubMed() {
-  const since = getDateDaysAgoSlashed(7);
-  const termPart = CORE_TERMS.join(" OR ");
   const allPmids = new Set();
-
-  for (const batch of JOURNAL_BATCHES) {
-    console.error(`[INFO] PubMed batch: ${batch.join(", ")}`);
-    const ids = await searchPubMedBatch(batch, termPart, since);
+  for (const q of SEARCH_QUERIES) {
+    console.error(`[INFO] PubMed query: ${q.name}`);
+    const ids = await searchPubMedQuery(q.term);
     ids.forEach((id) => allPmids.add(id));
-    await new Promise((r) => setTimeout(r, 400));
+    console.error(`[INFO]   → ${ids.length} PMIDs (total unique: ${allPmids.size})`);
+    await new Promise((r) => setTimeout(r, 1000));
   }
-
   console.error(`[INFO] PubMed total unique PMIDs: ${allPmids.size}`);
   return [...allPmids];
 }
@@ -149,8 +142,15 @@ async function searchEuropePMC() {
 
   console.error(`[INFO] Searching Europe PMC...`);
   try {
-    const resp = await fetchUrl(url, {}, 30000);
-    const data = await safeJson(resp);
+    const resp = await fetchGet(url, 30000);
+    const text = await resp.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.error(`[ERROR] Europe PMC non-JSON: ${text.slice(0, 200)}`);
+      return [];
+    }
     const results = data?.resultList?.result || [];
     console.error(`[INFO] Europe PMC found ${results.length} papers`);
     return results
@@ -180,25 +180,27 @@ async function fetchPubMedDetails(pmids) {
   }
 
   for (const chunk of chunks) {
-    const ids = chunk.join(",");
-    const body = new URLSearchParams({
+    const params = new URLSearchParams({
       db: "pubmed",
-      id: ids,
+      id: chunk.join(","),
       retmode: "xml",
+      tool: NCBI_TOOL,
+      email: NCBI_EMAIL,
     });
+    const url = `${PUBMED_FETCH}?${params.toString()}`;
     console.error(`[INFO] Fetching details for ${chunk.length} papers...`);
     try {
-      const resp = await fetchUrl(PUBMED_FETCH, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: body.toString(),
-      }, 90000);
+      const resp = await fetchGet(url, 90000);
       const xml = await resp.text();
+      if (xml.trim().startsWith("<!DOCTYPE") || xml.trim().startsWith("<html")) {
+        console.error(`[WARN] PubMed fetch returned HTML error`);
+        continue;
+      }
       allPapers.push(...parsePubMedXml(xml));
     } catch (e) {
       console.error(`[ERROR] PubMed fetch failed: ${e.message}`);
     }
-    await new Promise((r) => setTimeout(r, 300));
+    await new Promise((r) => setTimeout(r, 1000));
   }
   return allPapers;
 }
