@@ -8,7 +8,6 @@ const DOCS_DIR = join(__dirname, "..", "docs");
 const PROCESSED_FILE = join(__dirname, "..", ".processed-pmids.json");
 
 const EUROPE_PMC = "https://www.ebi.ac.uk/europepmc/webservices/rest/search";
-const CROSSREF = "https://api.crossref.org/works";
 const PUBMED_SEARCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi";
 const PUBMED_FETCH = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi";
 
@@ -41,38 +40,27 @@ function saveProcessedPmids(pmids) {
 }
 
 const EPMC_QUERIES = [
-  {
-    name: "VaD core",
-    q: '"vascular dementia" OR "vascular cognitive impairment" OR "post-stroke dementia"',
-  },
-  {
-    name: "PSCI + CSVD",
-    q: '"post-stroke cognitive impairment" OR "cerebral small vessel disease" OR "white matter hyperintensities"',
-  },
-  {
-    name: "subtypes",
-    q: '"Binswanger" OR "subcortical ischemic vascular dementia" OR CADASIL OR "strategic infarct dementia"',
-  },
-  {
-    name: "VaD + risk",
-    q: '("vascular dementia" OR "vascular cognitive impairment") AND (hypertension OR diabetes OR "atrial fibrillation" OR stroke)',
-  },
-  {
-    name: "VaD + imaging",
-    q: '("vascular cognitive impairment" OR "vascular dementia") AND (MRI OR "white matter" OR lacune OR microbleed)',
-  },
-  {
-    name: "VaD + neuropsych",
-    q: '("vascular dementia" OR "vascular cognitive impairment") AND (cognition OR "executive function" OR MoCA OR "cognitive decline")',
-  },
-  {
-    name: "VaD + care",
-    q: '("vascular dementia" OR "vascular cognitive impairment") AND (caregiver OR "quality of life" OR "long-term care" OR prevention)',
-  },
-  {
-    name: "VaD + mood",
-    q: '("vascular dementia" OR "vascular cognitive impairment") AND (depression OR apathy OR anxiety OR "neuropsychiatric")',
-  },
+  { name: "VaD core", q: '"vascular dementia" OR "vascular cognitive impairment" OR "post-stroke dementia"' },
+  { name: "PSCI", q: '"post-stroke cognitive impairment" OR PSCI' },
+  { name: "CSVD", q: '"cerebral small vessel disease" AND (cognition OR dementia OR "cognitive impairment")' },
+  { name: "WMH", q: '"white matter hyperintensities" AND (cognition OR dementia)' },
+  { name: "subtypes", q: '("Binswanger" OR CADASIL OR "subcortical ischemic vascular") AND (dementia OR cognition)' },
+  { name: "mixed", q: '"mixed dementia" OR ("vascular dementia" AND Alzheimer)' },
+  { name: "post-stroke", q: '("post-stroke" OR poststroke) AND (dementia OR "cognitive impairment")' },
+  { name: "vascular neurocognitive", q: '"vascular neurocognitive disorder" OR "vascular mild cognitive impairment"' },
+];
+
+const RELEVANCE_TERMS = [
+  "vascular dementia", "vascular cognitive impairment", "post-stroke cognitive",
+  "post-stroke dementia", "poststroke cognitive", "poststroke dementia", "PSCI",
+  "cerebral small vessel disease", "white matter hyperintensit", "subcortical ischemic vascular",
+  "Binswanger", "CADASIL", "strategic infarct", "vascular neurocognitive",
+  "vascular MCI", "vascular mild cognitive", "mixed dementia",
+  "white matter lesion", "lacunar stroke", "lacune", "microbleed",
+  "leukoaraiosis", "cerebrovascular disease AND cognition", "stroke AND dementia",
+  "vascular contribution", "vascular depression", "arteriolosclerosis AND cognition",
+  "blood-brain barrier AND cognition", "cerebral hypoperfusion",
+  "vascular risk factor AND dementia", "vascular risk factor AND cognition",
 ];
 
 async function httpGet(url, timeout = 45000) {
@@ -92,7 +80,7 @@ async function httpGet(url, timeout = 45000) {
 }
 
 async function searchEuropePMC() {
-  const since = getDateDaysAgoISO(7);
+  const since = getDateDaysAgoISO(14);
   const allResults = new Map();
 
   for (const { name, q } of EPMC_QUERIES) {
@@ -139,45 +127,13 @@ async function searchEuropePMC() {
   return [...allResults.values()];
 }
 
+function isRelevant(paper) {
+  const text = `${paper.title} ${paper.abstract}`.toLowerCase();
+  return RELEVANCE_TERMS.some((term) => text.includes(term.toLowerCase()));
+}
+
 async function searchCrossref() {
-  const since = getDateDaysAgoISO(7);
-  const query = '"vascular dementia" OR "vascular cognitive impairment" OR "post-stroke cognitive impairment"';
-  const filter = `from-pub-date:${since}`;
-  const url = `${CROSSREF}?query=${encodeURIComponent(query)}&filter=${filter}&rows=20&sort=published&order=desc`;
-
-  console.error(`[INFO] Searching Crossref...`);
-  try {
-    const resp = await httpGet(url, 30000);
-    const data = await resp.json();
-    const items = data?.message?.items || [];
-    console.error(`[INFO] Crossref found ${items.length} papers`);
-
-    return items
-      .filter((item) => item.DOI || item.title)
-      .map((item) => {
-        const title = (item.title || [""])[0] || "";
-        const journal = (item["container-title"] || [""])[0] || "";
-        const dateParts = item.published?.["date-parts"]?.[0] || [];
-        const dateStr = dateParts.join("-");
-
-        let pmid = "";
-        const articleNumber = item["article-number"] || "";
-        
-        return {
-          pmid,
-          title,
-          journal,
-          date: dateStr,
-          abstract: (item.abstract || "").replace(/<[^>]+>/g, "").slice(0, 2000),
-          url: item.DOI ? `https://doi.org/${item.DOI}` : item.URL || "",
-          doi: item.DOI || "",
-          keywords: item.subject || [],
-        };
-      });
-  } catch (e) {
-    console.error(`[WARN] Crossref failed: ${e.message}`);
-    return [];
-  }
+  return [];
 }
 
 async function tryPubMed() {
@@ -286,6 +242,7 @@ function mergeAndDedup(allSources, processedPmids) {
   for (const p of allSources) {
     const id = p.pmid || p.doi || p.title;
     if (!id || id.trim() === "") continue;
+    if (!isRelevant(p)) continue;
     if (processedPmids.has(p.pmid) && p.pmid) continue;
     const key = id.toLowerCase().trim();
     if (seen.has(key)) continue;
@@ -307,10 +264,10 @@ async function main() {
   const pubmedPapers = await tryPubMed();
 
   const allSources = [...epmcPapers, ...crossrefPapers, ...pubmedPapers];
-  console.error(`[INFO] Total from all sources: ${allSources.length}`);
+  console.error(`[INFO] Total from all sources (before relevance filter): ${allSources.length}`);
 
   const allPapers = mergeAndDedup(allSources, processedPmids);
-  console.error(`[INFO] After dedup: ${allPapers.length} new papers`);
+  console.error(`[INFO] After relevance filter + dedup: ${allPapers.length} new papers`);
 
   const output = {
     date: targetDate,
