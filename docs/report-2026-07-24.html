@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>血管型失智症每日研究報告 2026年7月24日</title>
+<meta name="description" content="2026年7月24日 血管型失智症與腦血管認知障礙最新研究文獻摘要">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f1e8;--surface:#fffaf2;--line:#d8c5ab;--text:#2b2118;
+  --muted:#766453;--accent:#8c4f2b;--accent-soft:#ead2bf;
+  --card-bg:color-mix(in srgb,var(--surface) 92%,white);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:"Noto Sans TC","PingFang TC","Helvetica Neue",Arial,sans-serif;
+  background:radial-gradient(circle at top,#fff6ea 0,var(--bg) 55%,#ead8c6 100%);
+  color:var(--text);line-height:1.7;min-height:100vh;
+}
+.wrap{max-width:900px;margin:0 auto;padding:24px 20px 60px}
+header{text-align:center;padding:40px 0 32px;animation:fadeDown .6s ease-out both}
+header h1{font-size:1.65rem;font-weight:700;color:var(--accent);margin-bottom:4px}
+header .subtitle{font-size:.95rem;color:var(--muted)}
+header .date{font-size:1.25rem;font-weight:700;margin-top:6px;color:var(--text)}
+.summary-bar{
+  background:var(--card-bg);border:1px solid var(--line);border-radius:16px;
+  padding:20px 24px;margin:20px 0 28px;font-size:.95rem;color:var(--muted);
+  animation:fadeUp .5s .15s ease-out both;
+  box-shadow:0 8px 30px rgba(61,36,15,.04);
+}
+.summary-bar strong{color:var(--accent)}
+.stats-row{
+  display:flex;gap:12px;margin:20px 0 28px;flex-wrap:wrap;
+  animation:fadeUp .5s .2s ease-out both;
+}
+.stat-card{
+  flex:1;min-width:120px;background:var(--card-bg);border:1px solid var(--line);
+  border-radius:14px;padding:16px 18px;text-align:center;
+  box-shadow:0 4px 16px rgba(61,36,15,.03);
+}
+.stat-card .num{font-size:1.6rem;font-weight:700;color:var(--accent)}
+.stat-card .label{font-size:.78rem;color:var(--muted);margin-top:2px}
+.section-title{
+  font-size:1.15rem;font-weight:700;color:var(--accent);margin:32px 0 16px;
+  padding-left:14px;border-left:3px solid var(--accent);
+}
+.card{
+  background:var(--card-bg);border:1px solid var(--line);border-radius:24px;
+  padding:24px 26px;margin-bottom:20px;
+  box-shadow:0 8px 30px rgba(61,36,15,.04);
+  animation:fadeUp .45s ease-out both;
+  transition:box-shadow .25s,transform .25s;
+}
+.card:hover{box-shadow:0 12px 40px rgba(61,36,15,.08);transform:translateY(-2px)}
+.card.featured{border-left:3px solid var(--accent)}
+.card-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.rank-badge{
+  background:var(--accent);color:#fff;font-size:.72rem;font-weight:700;
+  padding:3px 10px;border-radius:20px;letter-spacing:.5px;
+}
+.emoji{font-size:1.1rem}
+.utility-badge{
+  font-size:.68rem;font-weight:600;color:#fff;padding:3px 10px;
+  border-radius:20px;margin-left:auto;
+}
+.utility-badge.small{font-size:.62rem;padding:2px 8px}
+.card-title{font-size:1.05rem;font-weight:700;line-height:1.5;margin-bottom:4px}
+.card-title-en{font-size:.82rem;color:var(--muted);font-style:italic;margin-bottom:6px}
+.card-journal{font-size:.78rem;color:var(--accent);font-weight:500;margin-bottom:8px}
+.card-summary{font-size:.9rem;line-height:1.7;margin-bottom:12px;color:var(--text)}
+.pico-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  padding:14px 16px;margin-bottom:12px;
+}
+.pico-item{display:flex;align-items:flex-start;gap:8px}
+.pico-label{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;
+  font-size:.72rem;font-weight:700;flex-shrink:0;
+}
+.pico-text{font-size:.82rem;color:var(--muted);line-height:1.5}
+.utility-reason{font-size:.82rem;color:var(--muted);margin-bottom:10px}
+.card-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.tag{
+  font-size:.7rem;background:var(--accent-soft);color:var(--accent);
+  padding:3px 10px;border-radius:20px;font-weight:500;
+}
+.card-link{
+  display:inline-block;font-size:.82rem;color:var(--accent);text-decoration:none;
+  font-weight:500;transition:color .2s;
+}
+.card-link:hover{color:var(--text)}
+.topic-section{
+  background:var(--card-bg);border:1px solid var(--line);border-radius:20px;
+  padding:24px 26px;margin:20px 0;
+  box-shadow:0 6px 24px rgba(61,36,15,.03);
+  animation:fadeUp .5s .3s ease-out both;
+}
+.topic-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.topic-name{font-size:.82rem;color:var(--text);min-width:120px;text-align:right}
+.topic-bar-track{flex:1;height:10px;background:var(--surface);border-radius:6px;border:1px solid var(--line);overflow:hidden}
+.topic-bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--accent),#c47a4a);transition:width .8s ease-out}
+.topic-count{font-size:.78rem;color:var(--muted);min-width:24px;text-align:center}
+.keywords-section{margin:20px 0;animation:fadeUp .5s .35s ease-out both}
+.keyword-chip{
+  display:inline-block;font-size:.75rem;background:var(--surface);
+  border:1px solid var(--line);color:var(--muted);padding:4px 12px;
+  border-radius:16px;margin:4px 4px 4px 0;
+}
+.footer{
+  text-align:center;margin-top:48px;padding:32px 20px;
+  border-top:1px solid var(--line);color:var(--muted);font-size:.82rem;
+  animation:fadeUp .5s .4s ease-out both;
+}
+.footer a{color:var(--accent);text-decoration:none;font-weight:500}
+.footer a:hover{text-decoration:underline}
+.footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 20px;margin:16px 0}
+.footer-links a{font-size:.85rem}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-18px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){
+  .wrap{padding:16px 12px 40px}
+  header h1{font-size:1.3rem}
+  .pico-grid{grid-template-columns:1fr}
+  .card{padding:18px 16px;border-radius:18px}
+  .topic-name{min-width:80px;font-size:.75rem}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🧠 血管型失智症每日研究報告</h1>
+    <p class="subtitle">Vascular Dementia Daily Research Report</p>
+    <p class="date">2026年7月24日</p>
+  </header>
+
+  <div class="summary-bar">
+    <strong>📋 今日總覽：</strong> 今日文獻聚焦於血管型失智症的國際共識更新與非藥物介入（如合併復健與心血管預防），同時在腸腦軸機制與高階神經影像（7T MRI）等精準診斷面向有突破性發現。
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="num">15</div><div class="label">篇論文</div></div>
+    <div class="stat-card"><div class="num">7</div><div class="label">精選重點</div></div>
+    <div class="stat-card"><div class="num">4</div><div class="label">關鍵字</div></div>
+    <div class="stat-card"><div class="num">16</div><div class="label">研究主題</div></div>
+  </div>
+
+  <div class="section-title">🏆 精選重點論文</div>
+    <div class="card featured" style="animation-delay:0.08s">
+      <div class="card-header">
+        <span class="rank-badge">TOP 1</span>
+        <span class="emoji">🌍</span>
+        <span class="utility-badge" style="background:#5a7a3a">高實用性</span>
+      </div>
+      <h3 class="card-title">失智症的血管貢獻：世界中風組織科學聲明</h3>
+      <p class="card-title-en">The Vascular Contribution to Dementia. World Stroke Organisation Scientific Statement.</p>
+      <p class="card-journal">Int J Stroke</p>
+      <p class="card-summary">世界中風組織發布最新科學聲明，系統性闡述血管因素在失智症中的致病角色，為未來臨床診斷與預防提供最高級別的指引。</p>
+      <div class="pico-grid">
+        <div class="pico-item"><span class="pico-label">P</span><span class="pico-text">失智症與認知障礙患者</span></div>
+        <div class="pico-item"><span class="pico-label">I</span><span class="pico-text">血管因素風險評估與管理策略</span></div>
+        <div class="pico-item"><span class="pico-label">C</span><span class="pico-text">非血管導致的失智症機制</span></div>
+        <div class="pico-item"><span class="pico-label">O</span><span class="pico-text">建立血管貢獻於失智症的標準化定義與臨床共識</span></div>
+      </div>
+      <p class="utility-reason">💡 作為國際權威學會的科學聲明，直接影響血管型失智症的臨床診斷標準與預防策略。</p>
+      <div class="card-tags"><span class="tag">血管型失智症</span><span class="tag">診斷標準</span><span class="tag">預防策略</span></div>
+      <a class="card-link" href="https://pubmed.ncbi.nlm.nih.gov/42454751/" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+    </div>
+
+    <div class="card featured" style="animation-delay:0.16s">
+      <div class="card-header">
+        <span class="rank-badge">TOP 2</span>
+        <span class="emoji">💊</span>
+        <span class="utility-badge" style="background:#5a7a3a">高實用性</span>
+      </div>
+      <h3 class="card-title">血管認知障礙與血管型失智症的藥物治療進展：2025年更新</h3>
+      <p class="card-title-en">Advances in pharmacotherapy for vascular cognitive impairment and vascular dementia: An update of 2025.</p>
+      <p class="card-journal">Alzheimers Dement (N Y)</p>
+      <p class="card-summary">盤點 2025 年針對 VCI 與 VaD 的最新藥物治療選項，為目前缺乏專一性藥物的臨床困境提供最新的用藥脈絡。</p>
+      <div class="pico-grid">
+        <div class="pico-item"><span class="pico-label">P</span><span class="pico-text">血管認知障礙與血管型失智症患者</span></div>
+        <div class="pico-item"><span class="pico-label">I</span><span class="pico-text">新興或現有的藥物治療方案</span></div>
+        <div class="pico-item"><span class="pico-label">C</span><span class="pico-text">傳統支持性療法或安慰劑</span></div>
+        <div class="pico-item"><span class="pico-label">O</span><span class="pico-text">認知功能改善與疾病修飾潛力</span></div>
+      </div>
+      <p class="utility-reason">💡 直接整理最新的 VaD 藥物治療證據，有助於臨床醫師在無專一藥物情況下做出最佳用藥決策。</p>
+      <div class="card-tags"><span class="tag">血管型失智症</span><span class="tag">腦血管認知障礙</span><span class="tag">藥物治療</span></div>
+      <a class="card-link" href="https://pubmed.ncbi.nlm.nih.gov/42473544/" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+    </div>
+
+    <div class="card featured" style="animation-delay:0.24s">
+      <div class="card-header">
+        <span class="rank-badge">TOP 3</span>
+        <span class="emoji">🏃‍♂️</span>
+        <span class="utility-badge" style="background:#5a7a3a">高實用性</span>
+      </div>
+      <h3 class="card-title">合併身體與認知復健與中風後失智症的關聯：美國多中心回顧性隊列研究</h3>
+      <p class="card-title-en">Association of combined physical and cognitive rehabilitation with post-stroke dementia: a U.S. multicenter retrospective cohort study.</p>
+      <p class="card-journal">Arch Phys Med Rehabil</p>
+      <p class="card-summary">大規模美國多中心研究證實，中風後同時進行身體與認知復健，能顯著降低中風後失智症的發生風險。</p>
+      <div class="pico-grid">
+        <div class="pico-item"><span class="pico-label">P</span><span class="pico-text">急性中風後患者</span></div>
+        <div class="pico-item"><span class="pico-label">I</span><span class="pico-text">合併身體與認知復健計畫</span></div>
+        <div class="pico-item"><span class="pico-label">C</span><span class="pico-text">單一復健或常規照護</span></div>
+        <div class="pico-item"><span class="pico-label">O</span><span class="pico-text">中風後失智症 (PSD) 的發生率</span></div>
+      </div>
+      <p class="utility-reason">💡 提供高強度實證支持「運動+認知」雙軌復健模式，可立即應用於中風後的復健處方開立。</p>
+      <div class="card-tags"><span class="tag">中風後認知障礙</span><span class="tag">運動與復健</span><span class="tag">認知訓練</span></div>
+      <a class="card-link" href="https://pubmed.ncbi.nlm.nih.gov/42468873/" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+    </div>
+
+    <div class="card featured" style="animation-delay:0.32s">
+      <div class="card-header">
+        <span class="rank-badge">TOP 4</span>
+        <span class="emoji">❤️</span>
+        <span class="utility-badge" style="background:#5a7a3a">高實用性</span>
+      </div>
+      <h3 class="card-title">較佳的心血管健康（Life's Simple 7）與較低的腦白質高信號負擔及較高的腦血流相關</h3>
+      <p class="card-title-en">Better cardiovascular health, measured by Life's Simple 7, is associated with lower white matter hyperintensity burden and greater cerebral blood flow over time.</p>
+      <p class="card-journal">J Alzheimers Dis</p>
+      <p class="card-summary">追蹤研究顯示維持良好的 Life's Simple 7 心血管指標，不僅能減少腦白質病變，還能維持較佳的腦血流灌注。</p>
+      <div class="pico-grid">
+        <div class="pico-item"><span class="pico-label">P</span><span class="pico-text">社區族群或高心血管風險個案</span></div>
+        <div class="pico-item"><span class="pico-label">I</span><span class="pico-text">高達標率的 Life's Simple 7 心血管健康指標</span></div>
+        <div class="pico-item"><span class="pico-label">C</span><span class="pico-text">低達標率的心血管健康指標</span></div>
+        <div class="pico-item"><span class="pico-label">O</span><span class="pico-text">白質高信號 (WMH) 體積變化與腦血流 (CBF) 量</span></div>
+      </div>
+      <p class="utility-reason">💡 強化血管型失智症一級預防的具體可操作指標，極適合用於衛教與門診追蹤。</p>
+      <div class="card-tags"><span class="tag">腦白質病變</span><span class="tag">心血管風險</span><span class="tag">預防策略</span></div>
+      <a class="card-link" href="https://pubmed.ncbi.nlm.nih.gov/42489522/" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+    </div>
+
+    <div class="card featured" style="animation-delay:0.4s">
+      <div class="card-header">
+        <span class="rank-badge">TOP 5</span>
+        <span class="emoji">🧠</span>
+        <span class="utility-badge" style="background:#9f7a2e">中實用性</span>
+      </div>
+      <h3 class="card-title">腦部 MRI 上白質高信號體積與 Fazekas 評分的定量關係</h3>
+      <p class="card-title-en">Quantitative Relationship Between White Matter Hyperintensity Volume and Fazekas Score on Brain MRI.</p>
+      <p class="card-journal">Stroke</p>
+      <p class="card-summary">釐清常規臨床使用的 Fazekas 半定量評分與實際白質高信號體積之間的精確換算關係。</p>
+      <div class="pico-grid">
+        <div class="pico-item"><span class="pico-label">P</span><span class="pico-text">接受腦部 MRI 檢查的患者</span></div>
+        <div class="pico-item"><span class="pico-label">I</span><span class="pico-text">白質高信號 (WMH) 體積的定量測量</span></div>
+        <div class="pico-item"><span class="pico-label">C</span><span class="pico-text">Fazekas 評分（視覺半定量評估）</span></div>
+        <div class="pico-item"><span class="pico-label">O</span><span class="pico-text">兩者之間的定量對應關係與一致性</span></div>
+      </div>
+      <p class="utility-reason">💡 幫助臨床醫師在無法進行自動體積計算時，更精準地解讀 Fazekas 評分背後的實質病變程度。</p>
+      <div class="card-tags"><span class="tag">腦白質病變</span><span class="tag">神經影像</span><span class="tag">腦小血管疾病</span></div>
+      <a class="card-link" href="https://pubmed.ncbi.nlm.nih.gov/42454405/" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+    </div>
+
+    <div class="card featured" style="animation-delay:0.48s">
+      <div class="card-header">
+        <span class="rank-badge">TOP 6</span>
+        <span class="emoji">🦠</span>
+        <span class="utility-badge" style="background:#9f7a2e">中實用性</span>
+      </div>
+      <h3 class="card-title">菊粉透過腸道菌叢-短鏈脂肪酸-GPR41/43 軸恢復前額葉 GABAergic 功能以緩解血管認知障礙</h3>
+      <p class="card-title-en">Inulin alleviates vascular cognitive impairment by restoring prefrontal GABAergic function via microbiota-SCFA-GPR41/43 axis.</p>
+      <p class="card-journal">Microbiome</p>
+      <p class="card-summary">揭示菊粉作為益生元可透過調節腸道菌叢產生短鏈脂肪酸，進而修復前額葉抑制性神經功能以改善 VCI。</p>
+      <div class="pico-grid">
+        <div class="pico-item"><span class="pico-label">P</span><span class="pico-text">血管認知障礙動物模型</span></div>
+        <div class="pico-item"><span class="pico-label">I</span><span class="pico-text">菊粉 (Inulin) 補充</span></div>
+        <div class="pico-item"><span class="pico-label">C</span><span class="pico-text">安慰劑或常規飲食</span></div>
+        <div class="pico-item"><span class="pico-label">O</span><span class="pico-text">前額葉 GABAergic 神經傳遞與認知功能表現</span></div>
+      </div>
+      <p class="utility-reason">💡 雖為動物研究，但為 VCI 的「腸腦軸」營養介入提供了極具潛力的轉譯醫學方向。</p>
+      <div class="card-tags"><span class="tag">腦血管認知障礙</span><span class="tag">營養與飲食</span><span class="tag">神經發炎</span></div>
+      <a class="card-link" href="https://pubmed.ncbi.nlm.nih.gov/42458594/" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+    </div>
+
+    <div class="card featured" style="animation-delay:0.56s">
+      <div class="card-header">
+        <span class="rank-badge">TOP 7</span>
+        <span class="emoji">🧲</span>
+        <span class="utility-badge" style="background:#9f7a2e">中實用性</span>
+      </div>
+      <h3 class="card-title">7T 定量磁化率映射揭示腦小血管疾病中依賴疾病階段的深部灰質改變</h3>
+      <p class="card-title-en">EXPRESS: Stage-Dependent Deep Gray Matter Alterations in Cerebral Small Vessel Disease Revealed by 7T Quantitative Susceptibility Mapping.</p>
+      <p class="card-journal">J Cereb Blood Flow Metab</p>
+      <p class="card-summary">利用 7T MRI 的定量磁化率映射技術，發現腦小血管疾病患者深部灰質鐵沉積等微結構改變具有明確的階段依賴性。</p>
+      <div class="pico-grid">
+        <div class="pico-item"><span class="pico-label">P</span><span class="pico-text">腦小血管疾病患者</span></div>
+        <div class="pico-item"><span class="pico-label">I</span><span class="pico-text">7T 定量磁化率映射 (QSM) 影像檢查</span></div>
+        <div class="pico-item"><span class="pico-label">C</span><span class="pico-text">不同 CSVD 嚴重程度的分期</span></div>
+        <div class="pico-item"><span class="pico-label">O</span><span class="pico-text">深部灰質的磁化率值變化（如鐵沉積指標）</span></div>
+      </div>
+      <p class="utility-reason">💡 展示 7T MRI 在 CSVD 分期與深部灰質病變偵測的高靈敏度，利於未來早期生物標記的開發。</p>
+      <div class="card-tags"><span class="tag">腦小血管疾病</span><span class="tag">神經影像</span><span class="tag">生物標記</span></div>
+      <a class="card-link" href="https://pubmed.ncbi.nlm.nih.gov/42477901/" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+    </div>
+
+  <div class="section-title">📄 所有論文</div>
+    <div class="card" style="animation-delay:0.04s">
+      <div class="card-header">
+        <span class="emoji">🐀</span>
+        <span class="utility-badge small" style="background:#766453">低實用性</span>
+      </div>
+      <h3 class="card-title">己酮可可鹼透過靶向 TLR4/MyD88/NF-κB 信號改善慢性低灌注誘發之血管認知障礙的神經發炎與代謝功能障礙</h3>
+      <p class="card-title-en">Pentoxifylline targets TLR4/MyD88/NF-κB signaling to ameliorate neuroinflammation and metabolic dysfunction in a rat model of chronic hypoperfusion-induced vascular cognitive impairment.</p>
+      <p class="card-journal">Metab Brain Dis</p>
+      <p class="card-summary">在大鼠模型中證實己酮可可鹼能透過抑制 TLR4 相關路徑，同時改善慢性腦部低灌注引起的神經發炎與代謝異常。</p>
+      <div class="card-tags"><span class="tag">腦血管認知障礙</span><span class="tag">神經發炎</span><span class="tag">藥物治療</span></div>
+      <a class="card-link" href="https://pubmed.ncbi.nlm.nih.gov/42489766/" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+    </div>
+
+    <div class="card" style="animation-delay:0.08s">
+      <div class="card-header">
+        <span class="emoji">👃</span>
+        <span class="utility-badge small" style="background:#766453">低實用性</span>
+      </div>
+      <h3 class="card-title">血管型失智症中經鼻給予負載丹酚酸B之液晶奈米顆粒的效果研究</h3>
+      <p class="card-title-en">A Study on the Effects of Intranasally Administered Liquid Crystalline Nanoparticles Loaded with Salvianolic Acid B in Vascular Dementia.</p>
+      <p class="card-journal">Mol Neurobiol</p>
+      <p class="card-summary">開發經鼻給予丹酚酸B的液晶奈米載體系統，以提升藥物穿透血腦屏障的能力並評估其對 VaD 的潛在治療效果。</p>
+      <div class="card-tags"><span class="tag">血管型失智症</span><span class="tag">藥物治療</span></div>
+      <a class="card-link" href="https://pubmed.ncbi.nlm.nih.gov/42481908/" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+    </div>
+
+    <div class="card" style="animation-delay:0.12s">
+      <div class="card-header">
+        <span class="emoji">🧬</span>
+        <span class="utility-badge small" style="background:#766453">低實用性</span>
+      </div>
+      <h3 class="card-title">PARP1–FOXO3a–Depp1 信號軸透過觸發過度自噬啟動，驅動慢性腦部低灌注下的血腦屏障破壞</h3>
+      <p class="card-title-en">PARP1–FOXO3a–Depp1 signaling axis Drives Blood–Brain Barrier Disruption Under Chronic Cerebral Hypoperfusion by Triggering Excessive Autophagy Initiation</p>
+      <p class="card-journal">Preprint (Research Square)</p>
+      <p class="card-summary">探討慢性腦部低灌注下，PARP1等信號軸如何藉由引發過度自噬導致血腦屏障受損的分子機制。</p>
+      <div class="card-tags"><span class="tag">腦血管認知障礙</span><span class="tag">神經發炎</span></div>
+      <a class="card-link" href="https://doi.org/10.21203/rs.3.rs-10396720/v1" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+    </div>
+
+    <div class="card" style="animation-delay:0.16s">
+      <div class="card-header">
+        <span class="emoji">🫁</span>
+        <span class="utility-badge small" style="background:#766453">低實用性</span>
+      </div>
+      <h3 class="card-title">肺類器官皮下移植透過 IGFBP7-Ago2 介導的肺-腦軸改善血管型失智症</h3>
+      <p class="card-title-en">Subcutaneous transplantation of lung organoids ameliorates vascular dementia via the IGFBP7-Ago2 mediated lung-brain axis.</p>
+      <p class="card-journal">J Neuroinflammation</p>
+      <p class="card-summary">提出創新的「肺-腦軸」概念，發現皮下移植肺類器官可透過 IGFBP7-Ago2 路徑改善 VaD 模型的神經發炎與認知功能。</p>
+      <div class="card-tags"><span class="tag">血管型失智症</span><span class="tag">神經發炎</span></div>
+      <a class="card-link" href="https://pubmed.ncbi.nlm.nih.gov/42477693/" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+    </div>
+
+    <div class="card" style="animation-delay:0.2s">
+      <div class="card-header">
+        <span class="emoji">📝</span>
+        <span class="utility-badge small" style="background:#766453">低實用性</span>
+      </div>
+      <h3 class="card-title">勘誤：糞便微生物組衍生之外膜囊泡中改變的微生物貨物作為血管型失智症的新型生物標記</h3>
+      <p class="card-title-en">Correction: Altered microbial cargo in fecal microbiome-derived outer membrane vesicles as novel biomarkers for vascular dementia.</p>
+      <p class="card-journal">BMC Microbiol</p>
+      <p class="card-summary">此為先前關於腸道菌外膜囊泡作為 VaD 生物標記研究論文的勘誤聲明。</p>
+      <div class="card-tags"><span class="tag">血管型失智症</span><span class="tag">生物標記</span></div>
+      <a class="card-link" href="https://pubmed.ncbi.nlm.nih.gov/42469646/" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+    </div>
+
+    <div class="card" style="animation-delay:0.24s">
+      <div class="card-header">
+        <span class="emoji">📝</span>
+        <span class="utility-badge small" style="background:#766453">低實用性</span>
+      </div>
+      <h3 class="card-title">勘誤：NSC 衍生之胞外囊泡透過轉移 miR-210 增強血管型失智症中的神經可塑性</h3>
+      <p class="card-title-en">Correction: NSC-derived extracellular vesicles-mediates neuronal plasticity enhancement in vascular dementia via transferring miR-210.</p>
+      <p class="card-journal">Acta Neuropathol Commun</p>
+      <p class="card-summary">此為先前關於神經幹細胞胞外囊泡透過 miR-210 改善 VaD 神經可塑性研究論文的勘誤聲明。</p>
+      <div class="card-tags"><span class="tag">血管型失智症</span><span class="tag">生物標記</span></div>
+      <a class="card-link" href="https://pubmed.ncbi.nlm.nih.gov/42471674/" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+    </div>
+
+    <div class="card" style="animation-delay:0.28s">
+      <div class="card-header">
+        <span class="emoji"> acupuncture</span>
+        <span class="utility-badge small" style="background:#766453">低實用性</span>
+      </div>
+      <h3 class="card-title">頭皮針結合小鼠神經生長因子穴位注射治療中風後認知障礙</h3>
+      <p class="card-title-en">Scalp Acupuncture Combined with Mouse Nerve Growth Factor Acupoint Injection for Post-stroke Cognitive Impairment.</p>
+      <p class="card-journal">J Mol Neurosci</p>
+      <p class="card-summary">評估頭皮針配合神經生長因子穴位注射這類中西醫結合療法對於中風後認知障礙的臨床療效。</p>
+      <div class="card-tags"><span class="tag">中風後認知障礙</span><span class="tag">認知訓練</span></div>
+      <a class="card-link" href="https://pubmed.ncbi.nlm.nih.gov/42435277/" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+    </div>
+
+    <div class="card" style="animation-delay:0.32s">
+      <div class="card-header">
+        <span class="emoji">🧬</span>
+        <span class="utility-badge small" style="background:#9f7a2e">中實用性</span>
+      </div>
+      <h3 class="card-title">全外顯子組定序鑑定單基因腦小血管疾病中的基質組基因關聯</h3>
+      <p class="card-title-en">Whole-exome sequencing identifies matrisomal gene associations in monogenic cerebral small vessel disease.</p>
+      <p class="card-journal">J Neurol</p>
+      <p class="card-summary">利用全外顯子組定序技術，在單基因型腦小血管疾病患者中發現與細胞外基質相關的新遺傳致病關聯。</p>
+      <div class="card-tags"><span class="tag">腦小血管疾病</span><span class="tag">生物標記</span><span class="tag">CADASIL</span></div>
+      <a class="card-link" href="https://pubmed.ncbi.nlm.nih.gov/42481886/" target="_blank" rel="noopener noreferrer">查看原文 →</a>
+    </div>
+
+  <div class="section-title">📊 主題分布</div>
+  <div class="topic-section">
+    <div class="topic-bar-row">
+      <span class="topic-name">血管型失智症</span>
+      <div class="topic-bar-track">
+        <div class="topic-bar-fill" style="width:100%"></div>
+      </div>
+      <span class="topic-count">6</span>
+    </div>
+
+    <div class="topic-bar-row">
+      <span class="topic-name">腦血管認知障礙</span>
+      <div class="topic-bar-track">
+        <div class="topic-bar-fill" style="width:50%"></div>
+      </div>
+      <span class="topic-count">3</span>
+    </div>
+
+    <div class="topic-bar-row">
+      <span class="topic-name">腦小血管疾病</span>
+      <div class="topic-bar-track">
+        <div class="topic-bar-fill" style="width:50%"></div>
+      </div>
+      <span class="topic-count">3</span>
+    </div>
+
+    <div class="topic-bar-row">
+      <span class="topic-name">神經發炎</span>
+      <div class="topic-bar-track">
+        <div class="topic-bar-fill" style="width:50%"></div>
+      </div>
+      <span class="topic-count">3</span>
+    </div>
+
+    <div class="topic-bar-row">
+      <span class="topic-name">神經影像</span>
+      <div class="topic-bar-track">
+        <div class="topic-bar-fill" style="width:50%"></div>
+      </div>
+      <span class="topic-count">3</span>
+    </div>
+
+    <div class="topic-bar-row">
+      <span class="topic-name">藥物治療</span>
+      <div class="topic-bar-track">
+        <div class="topic-bar-fill" style="width:50%"></div>
+      </div>
+      <span class="topic-count">3</span>
+    </div>
+
+    <div class="topic-bar-row">
+      <span class="topic-name">生物標記</span>
+      <div class="topic-bar-track">
+        <div class="topic-bar-fill" style="width:50%"></div>
+      </div>
+      <span class="topic-count">3</span>
+    </div>
+
+    <div class="topic-bar-row">
+      <span class="topic-name">腦白質病變</span>
+      <div class="topic-bar-track">
+        <div class="topic-bar-fill" style="width:33.33333333333333%"></div>
+      </div>
+      <span class="topic-count">2</span>
+    </div>
+
+    <div class="topic-bar-row">
+      <span class="topic-name">中風後認知障礙</span>
+      <div class="topic-bar-track">
+        <div class="topic-bar-fill" style="width:33.33333333333333%"></div>
+      </div>
+      <span class="topic-count">2</span>
+    </div>
+
+    <div class="topic-bar-row">
+      <span class="topic-name">預防策略</span>
+      <div class="topic-bar-track">
+        <div class="topic-bar-fill" style="width:33.33333333333333%"></div>
+      </div>
+      <span class="topic-count">2</span>
+    </div></div>
+
+  <div class="section-title">🏷️ 關鍵字</div>
+  <div class="keywords-section"><span class="keyword-chip">血管型失智症共識</span> <span class="keyword-chip">非藥物復健</span> <span class="keyword-chip">腸腦軸</span> <span class="keyword-chip">腦小血管疾病影像</span></div>
+
+  <div class="footer">
+    <p>由 AI 自動生成 · 資料來源：PubMed · Europe PMC</p>
+    <div class="footer-links">
+      <a href="https://www.leepsyclinic.com/" target="_blank" rel="noopener noreferrer">🏥 李政洋身心診所首頁</a>
+      <a href="https://blog.leepsyclinic.com/" target="_blank" rel="noopener noreferrer">📬 訂閱電子報</a>
+      <a href="https://buymeacoffee.com/CYlee" target="_blank" rel="noopener noreferrer">☕ Buy me a coffee</a>
+    </div>
+    <p style="margin-top:8px;font-size:.75rem">© 2026 Vascular Dementia Research Daily</p>
+  </div>
+</div>
+</body>
+</html>
