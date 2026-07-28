@@ -6,8 +6,8 @@ import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DOCS_DIR = join(__dirname, "..", "docs");
 
-const API_BASE = "https://open.bigmodel.cn/api/coding/paas/v4";
-const MODEL_PRIORITY = ["glm-5-turbo", "glm-4.7", "glm-4.7-flash"];
+const API_BASE = process.env.NVIDIA_API_BASE || "https://integrate.api.nvidia.com/v1";
+const MODEL_PRIORITY = ["nvidia/nemotron-3-super-120b-a12b", "nvidia/nemotron-3-nano-30b-a3b"];
 
 const SYSTEM_PROMPT = `你是血管型失智症與腦血管認知障礙領域的專業摘要與分析專家。你的任務是：
 1. 從提供的學術論文中，擷取出最新的趨勢與研究價值的要點
@@ -67,7 +67,7 @@ function robustJsonParse(text) {
   return null;
 }
 
-async function callZhipuAPI(apiKey, model, payload, timeout = 480000) {
+async function callNvidiaAPI(apiKey, model, payload, timeout = 480000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   try {
@@ -158,9 +158,11 @@ ${papersText}
       { role: "system", content: SYSTEM_PROMPT },
       { role: "user", content: prompt },
     ],
-    temperature: 0.3,
-    top_p: 0.9,
-    max_tokens: 50000,
+    temperature: 1.0,
+    top_p: 0.95,
+    stream: false,
+    chat_template_kwargs: { enable_thinking: false },
+    max_tokens: 16384,
   };
 
   for (const model of MODEL_PRIORITY) {
@@ -168,7 +170,7 @@ ${papersText}
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         console.error(`[INFO] Trying ${model} (attempt ${attempt + 1})...`);
-        const data = await callZhipuAPI(apiKey, model, payload, 480000);
+        const data = await callNvidiaAPI(apiKey, model, payload, 480000);
         const text = data.choices?.[0]?.message?.content?.trim() || "";
         if (!text) {
           console.error(`[WARN] Empty response from ${model}`);
@@ -502,7 +504,7 @@ async function main() {
   const args = process.argv.slice(2);
   let inputPath = join(DOCS_DIR, "papers.json");
   let outputDir = DOCS_DIR;
-  const apiKey = process.env.ZHIPU_API_KEY || "";
+  const apiKey = process.env.NVIDIA_API_KEY || "";
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--input" && args[i + 1]) inputPath = args[++i];
@@ -510,7 +512,7 @@ async function main() {
   }
 
   if (!apiKey) {
-    console.error("[ERROR] ZHIPU_API_KEY environment variable is required");
+    console.error("[ERROR] NVIDIA_API_KEY environment variable is required");
     process.exit(1);
   }
 

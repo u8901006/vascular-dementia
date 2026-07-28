@@ -58,9 +58,9 @@ jobs:
             echo "No papers found, will generate empty report"
           fi
 
-      - name: Generate report with Zhipu AI
+      - name: Generate report with NVIDIA NIM Nemotron 3
         env:
-          ZHIPU_API_KEY: ${{ secrets.ZHIPU_API_KEY }}
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
         run: node scripts/generate-report.mjs --input docs/papers.json --output-dir docs
 
       - name: Generate index page
