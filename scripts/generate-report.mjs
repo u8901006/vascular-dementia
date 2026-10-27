@@ -7,7 +7,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const DOCS_DIR = join(__dirname, "..", "docs");
 
 const API_BASE = process.env.NVIDIA_API_BASE || "https://integrate.api.nvidia.com/v1";
-const MODEL_PRIORITY = ["nvidia/nemotron-3-super-120b-a12b", "nvidia/nemotron-3-nano-30b-a3b"];
+const MODEL_PRIORITY = ["nvidia/nemotron-3-ultra-550b-a55b", "nvidia/nemotron-3-ultra-550b-a55b"];
 
 const SYSTEM_PROMPT = `你是血管型失智症與腦血管認知障礙領域的專業摘要與分析專家。你的任務是：
 1. 從提供的學術論文中，擷取出最新的趨勢與研究價值的要點
